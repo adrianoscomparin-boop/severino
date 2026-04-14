@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Busca de CEP</title>
+<title>Cavuca CEP</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -17,58 +17,114 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 16px 40px;
+  padding: 24px 16px 48px;
 }
 
 h1 {
   color: #fff8e8;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
   margin-bottom: 4px;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 .subtitle {
   color: rgba(255,220,150,0.7);
-  font-size: 12px;
-  letter-spacing: 2px;
+  font-size: 11px;
+  letter-spacing: 3px;
   text-transform: uppercase;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
+/* ── CARD ── */
 .card {
   background: #f5ede0;
   border-radius: 16px;
-  padding: 24px 20px;
+  padding: 20px 18px 18px;
   width: 100%;
   max-width: 440px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
-.input-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+/* ── MODE TOGGLE ── */
+.modo-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 18px;
+  background: #e8d8c4;
+  border-radius: 10px;
+  padding: 4px;
 }
+.modo-btn {
+  padding: 10px 6px;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  background: transparent;
+  color: #8a5530;
+  -webkit-appearance: none;
+}
+.modo-btn.ativo {
+  background: #6b3010;
+  color: #fff8e8;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.modo-btn:not(.ativo):active { background: rgba(107,48,16,0.15); transform: none; }
 
-input[type="text"] {
-  flex: 1;
-  padding: 14px 16px;
+/* ── INPUTS ── */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.campo-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #8a5530;
+  padding-left: 2px;
+}
+input[type="text"], select {
+  width: 100%;
+  padding: 13px 14px;
   border: 2px solid #d4b896;
   border-radius: 10px;
-  font-size: 20px;
+  font-size: 16px;
   font-family: inherit;
   background: #fff;
   color: #1c0f00;
-  letter-spacing: 2px;
   outline: none;
   transition: border-color 0.2s;
   -webkit-appearance: none;
+  appearance: none;
 }
-input[type="text"]:focus { border-color: #c9922a; }
-input[type="text"]::placeholder { color: #b8a090; letter-spacing: 1px; font-size: 16px; }
+input[type="text"]:focus, select:focus { border-color: #c9922a; }
+input[type="text"]::placeholder { color: #b8a090; }
+#cepInput { font-size: 22px; letter-spacing: 3px; }
+#cepInput::placeholder { font-size: 16px; letter-spacing: 1px; }
 
-button {
-  padding: 14px 20px;
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: '▾';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a5530;
+  pointer-events: none;
+  font-size: 14px;
+}
+select { padding-right: 36px; cursor: pointer; }
+
+.btn-buscar {
+  width: 100%;
+  padding: 14px;
   background: #6b3010;
   color: #fff8e8;
   border: none;
@@ -79,22 +135,44 @@ button {
   font-family: inherit;
   transition: background 0.15s, transform 0.1s;
   -webkit-appearance: none;
-  white-space: nowrap;
+  margin-top: 4px;
 }
-button:active { background: #4a1f08; transform: scale(0.97); }
+.btn-buscar:active { background: #4a1f08; transform: scale(0.98); }
 
-.result {
+/* ── SPINNER ── */
+.spinner {
+  display: none;
+  justify-content: center;
+  padding: 18px 0 6px;
+}
+.spinner.visible { display: flex; }
+.spinner svg { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── ERROR ── */
+.error-msg {
+  display: none;
+  background: #fde8e8;
+  border: 1px solid #e8b0b0;
+  border-radius: 10px;
+  padding: 13px 15px;
+  color: #8b0000;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+.error-msg.visible { display: block; }
+
+/* ── DETALHE (resultado CEP único) ── */
+.detalhe {
   display: none;
   flex-direction: column;
   gap: 10px;
+  margin-top: 4px;
 }
-.result.visible { display: flex; }
+.detalhe.visible { display: flex; }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
+.field { display: flex; flex-direction: column; gap: 3px; }
 .field-label {
   font-size: 10px;
   font-weight: 700;
@@ -103,68 +181,105 @@ button:active { background: #4a1f08; transform: scale(0.97); }
   color: #8a5530;
 }
 .field-value {
-  font-size: 16px;
+  font-size: 15px;
   color: #1c0f00;
   font-weight: 500;
-  padding: 10px 14px;
+  padding: 10px 13px;
   background: #fff;
   border-radius: 8px;
   border: 1px solid #ddd0c0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   min-height: 44px;
 }
 .field-value span { flex: 1; }
+.divider { height: 1px; background: #d4b896; margin: 2px 0; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 .copy-btn {
   background: none;
   border: none;
   padding: 4px 6px;
   color: #c9922a;
-  font-size: 18px;
+  font-size: 17px;
   cursor: pointer;
   border-radius: 6px;
-  transition: background 0.15s;
   line-height: 1;
   flex-shrink: 0;
+  -webkit-appearance: none;
 }
-.copy-btn:active { background: rgba(201,146,42,0.15); transform: none; }
+.copy-btn:active { background: rgba(201,146,42,0.18); }
 
-.divider {
-  height: 1px;
-  background: #d4b896;
-  margin: 4px 0;
-}
-
-.error-msg {
+/* ── LISTA (resultados endereço) ── */
+.lista-header {
   display: none;
-  background: #fde8e8;
-  border: 1px solid #e8b0b0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #8a5530;
+  margin: 10px 0 8px;
+}
+.lista-header.visible { display: block; }
+
+.lista {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  margin-top: 2px;
+  padding-right: 2px;
+}
+.lista.visible { display: flex; }
+.lista::-webkit-scrollbar { width: 4px; }
+.lista::-webkit-scrollbar-thumb { background: #c9a070; border-radius: 4px; }
+
+.result-card {
+  background: #fff;
+  border: 1px solid #ddd0c0;
   border-radius: 10px;
-  padding: 14px 16px;
-  color: #8b0000;
-  font-size: 14px;
-  font-weight: 500;
-}
-.error-msg.visible { display: block; }
-
-.spinner {
-  display: none;
-  justify-content: center;
-  padding: 16px 0 4px;
-}
-.spinner.visible { display: flex; }
-.spinner svg { animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.row2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
   gap: 10px;
+  cursor: default;
+}
+.result-card-info { flex: 1; min-width: 0; }
+.result-cep {
+  font-size: 15px;
+  font-weight: 700;
+  color: #6b3010;
+  letter-spacing: 1px;
+}
+.result-rua {
+  font-size: 13px;
+  color: #1c0f00;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.result-local {
+  font-size: 11px;
+  color: #8a5530;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* ── FOOTER ── */
+.source-badge {
+  text-align: center;
+  font-size: 10px;
+  color: #b8a090;
+  margin-top: 16px;
+  letter-spacing: 0.5px;
+}
+
+/* ── TOAST ── */
 .copied-toast {
   position: fixed;
   bottom: 32px;
@@ -172,51 +287,77 @@ button:active { background: #4a1f08; transform: scale(0.97); }
   transform: translateX(-50%) translateY(80px);
   background: #1c0f00;
   color: #c9922a;
-  padding: 10px 20px;
+  padding: 10px 22px;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.5px;
   pointer-events: none;
   transition: transform 0.25s ease, opacity 0.25s ease;
   opacity: 0;
   z-index: 999;
   white-space: nowrap;
 }
-.copied-toast.show {
-  transform: translateX(-50%) translateY(0);
-  opacity: 1;
-}
-
-.source-badge {
-  text-align: center;
-  font-size: 10px;
-  color: #b8a090;
-  margin-top: 14px;
-  letter-spacing: 0.5px;
-}
+.copied-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 </style>
 </head>
 <body>
 
-<h1>Busca de CEP</h1>
-<p class="subtitle">Consulta de endereço</p>
+<h1>Cavuca CEP</h1>
+<p class="subtitle">Busca de endereço</p>
 
 <div class="card">
-  <div class="input-row">
-    <input
-      type="text"
-      id="cepInput"
-      inputmode="numeric"
-      maxlength="9"
-      placeholder="00000-000"
-      autocomplete="off"
-      autocorrect="off"
-      spellcheck="false"
-    >
-    <button onclick="buscar()">Buscar</button>
+
+  <!-- Alternador de modo -->
+  <div class="modo-toggle">
+    <button class="modo-btn ativo" id="btnModoCep" onclick="trocarModo('cep')">🔢 Por CEP</button>
+    <button class="modo-btn" id="btnModoEnd" onclick="trocarModo('endereco')">🔍 Por Endereço</button>
   </div>
 
+  <!-- ── MODO CEP ── -->
+  <div id="painelCep">
+    <div class="campo">
+      <label class="campo-label" for="cepInput">CEP</label>
+      <input type="text" id="cepInput" inputmode="numeric" maxlength="9"
+             placeholder="00000-000" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <button class="btn-buscar" onclick="buscarCep()">Buscar</button>
+  </div>
+
+  <!-- ── MODO ENDEREÇO ── -->
+  <div id="painelEndereco" style="display:none">
+    <div class="row2" style="margin-bottom:12px">
+      <div class="campo" style="margin-bottom:0">
+        <label class="campo-label" for="selUF">Estado</label>
+        <div class="select-wrap">
+          <select id="selUF">
+            <option value="">UF</option>
+            <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+            <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+            <option>GO</option><option>MA</option><option selected>MT</option><option>MS</option>
+            <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+            <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+            <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+            <option>SP</option><option>SE</option><option>TO</option>
+          </select>
+        </div>
+      </div>
+      <div class="campo" style="margin-bottom:0">
+        <label class="campo-label" for="inCidade">Cidade</label>
+        <input type="text" id="inCidade" placeholder="Ex: Sinop" autocorrect="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="campo">
+      <label class="campo-label" for="inRua">Rua / Avenida</label>
+      <input type="text" id="inRua" placeholder="Ex: Avenida das Flores" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="campo">
+      <label class="campo-label" for="inBairro">Bairro <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aaa">(filtro opcional)</span></label>
+      <input type="text" id="inBairro" placeholder="Ex: Centro" autocorrect="off" spellcheck="false">
+    </div>
+    <button class="btn-buscar" onclick="buscarEndereco()">Buscar</button>
+  </div>
+
+  <!-- Spinner compartilhado -->
   <div class="spinner" id="spinner">
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
       <circle cx="14" cy="14" r="11" stroke="#d4b896" stroke-width="3"/>
@@ -224,49 +365,55 @@ button:active { background: #4a1f08; transform: scale(0.97); }
     </svg>
   </div>
 
+  <!-- Erro compartilhado -->
   <div class="error-msg" id="errorMsg"></div>
 
-  <div class="result" id="result">
+  <!-- Detalhe (busca por CEP) -->
+  <div class="detalhe" id="detalhe">
     <div class="field">
       <div class="field-label">CEP</div>
-      <div class="field-value"><span id="fCep"></span><button class="copy-btn" onclick="copiar('fCep')" title="Copiar">⧉</button></div>
+      <div class="field-value"><span id="fCep"></span><button class="copy-btn" onclick="copiarTexto('fCep')">⧉</button></div>
     </div>
     <div class="field">
       <div class="field-label">Logradouro</div>
-      <div class="field-value"><span id="fLogradouro"></span><button class="copy-btn" onclick="copiar('fLogradouro')" title="Copiar">⧉</button></div>
+      <div class="field-value"><span id="fLogradouro"></span><button class="copy-btn" onclick="copiarTexto('fLogradouro')">⧉</button></div>
     </div>
     <div class="row2">
       <div class="field">
         <div class="field-label">Bairro</div>
-        <div class="field-value"><span id="fBairro"></span><button class="copy-btn" onclick="copiar('fBairro')" title="Copiar">⧉</button></div>
+        <div class="field-value"><span id="fBairro"></span><button class="copy-btn" onclick="copiarTexto('fBairro')">⧉</button></div>
       </div>
       <div class="field">
         <div class="field-label">Complemento</div>
-        <div class="field-value"><span id="fComplemento"></span><button class="copy-btn" onclick="copiar('fComplemento')" title="Copiar">⧉</button></div>
+        <div class="field-value"><span id="fComplemento"></span><button class="copy-btn" onclick="copiarTexto('fComplemento')">⧉</button></div>
       </div>
     </div>
     <div class="row2">
       <div class="field">
         <div class="field-label">Cidade</div>
-        <div class="field-value"><span id="fCidade"></span><button class="copy-btn" onclick="copiar('fCidade')" title="Copiar">⧉</button></div>
+        <div class="field-value"><span id="fCidade"></span><button class="copy-btn" onclick="copiarTexto('fCidade')">⧉</button></div>
       </div>
       <div class="field">
         <div class="field-label">Estado</div>
-        <div class="field-value"><span id="fEstado"></span><button class="copy-btn" onclick="copiar('fEstado')" title="Copiar">⧉</button></div>
+        <div class="field-value"><span id="fEstado"></span><button class="copy-btn" onclick="copiarTexto('fEstado')">⧉</button></div>
       </div>
     </div>
     <div class="divider"></div>
     <div class="row2">
       <div class="field">
         <div class="field-label">IBGE</div>
-        <div class="field-value"><span id="fIbge"></span><button class="copy-btn" onclick="copiar('fIbge')" title="Copiar">⧉</button></div>
+        <div class="field-value"><span id="fIbge"></span><button class="copy-btn" onclick="copiarTexto('fIbge')">⧉</button></div>
       </div>
       <div class="field">
         <div class="field-label">DDD</div>
-        <div class="field-value"><span id="fDdd"></span><button class="copy-btn" onclick="copiar('fDdd')" title="Copiar">⧉</button></div>
+        <div class="field-value"><span id="fDdd"></span><button class="copy-btn" onclick="copiarTexto('fDdd')">⧉</button></div>
       </div>
     </div>
   </div>
+
+  <!-- Lista (busca por endereço) -->
+  <div class="lista-header" id="listaHeader"></div>
+  <div class="lista" id="lista"></div>
 
   <p class="source-badge">Via <a href="https://viacep.com.br" target="_blank" rel="noopener" style="color:#c9922a;text-decoration:none;">ViaCEP</a> · sem CAPTCHA</p>
 </div>
@@ -274,100 +421,186 @@ button:active { background: #4a1f08; transform: scale(0.97); }
 <div class="copied-toast" id="toast">Copiado!</div>
 
 <script>
-const input = document.getElementById('cepInput');
-const resultEl = document.getElementById('result');
-const errorEl = document.getElementById('errorMsg');
-const spinner = document.getElementById('spinner');
-const toast = document.getElementById('toast');
+/* ── refs ── */
+const spinnerEl   = document.getElementById('spinner');
+const errorEl     = document.getElementById('errorMsg');
+const detalheEl   = document.getElementById('detalhe');
+const listaEl     = document.getElementById('lista');
+const listaHeader = document.getElementById('listaHeader');
+const toast       = document.getElementById('toast');
 
-// Format input as CEP mask (00000-000)
-input.addEventListener('input', () => {
-  let v = input.value.replace(/\D/g, '').slice(0, 8);
+/* ── modo ── */
+let modoAtual = 'cep';
+
+function trocarModo(modo) {
+  modoAtual = modo;
+  document.getElementById('painelCep').style.display      = modo === 'cep'      ? '' : 'none';
+  document.getElementById('painelEndereco').style.display = modo === 'endereco' ? '' : 'none';
+  document.getElementById('btnModoCep').classList.toggle('ativo', modo === 'cep');
+  document.getElementById('btnModoEnd').classList.toggle('ativo', modo === 'endereco');
+  limparResultados();
+}
+
+/* ── máscara CEP ── */
+const cepInput = document.getElementById('cepInput');
+cepInput.addEventListener('input', () => {
+  let v = cepInput.value.replace(/\D/g, '').slice(0, 8);
   if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
-  input.value = v;
+  cepInput.value = v;
+});
+cepInput.addEventListener('keydown', e => { if (e.key === 'Enter') buscarCep(); });
+['inCidade','inRua','inBairro'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') buscarEndereco(); });
 });
 
-input.addEventListener('keydown', e => {
-  if (e.key === 'Enter') buscar();
-});
+/* ── utilitários de estado ── */
+function limparResultados() {
+  errorEl.classList.remove('visible');
+  detalheEl.classList.remove('visible');
+  listaEl.classList.remove('visible');
+  listaHeader.classList.remove('visible');
+  listaEl.innerHTML = '';
+}
+
+function mostrarErro(msg) {
+  limparResultados();
+  errorEl.textContent = msg;
+  errorEl.classList.add('visible');
+}
 
 function setField(id, value) {
   document.getElementById(id).textContent = value || '—';
 }
 
-function showError(msg) {
-  errorEl.textContent = msg;
-  errorEl.classList.add('visible');
-  resultEl.classList.remove('visible');
-}
+/* ── busca por CEP ── */
+async function buscarCep() {
+  const cep = cepInput.value.replace(/\D/g, '');
+  if (cep.length !== 8) { mostrarErro('Digite um CEP válido com 8 dígitos.'); return; }
 
-function hideAll() {
-  errorEl.classList.remove('visible');
-  resultEl.classList.remove('visible');
-}
-
-async function buscar() {
-  const cep = input.value.replace(/\D/g, '');
-  if (cep.length !== 8) {
-    showError('Digite um CEP válido com 8 dígitos.');
-    return;
-  }
-
-  hideAll();
-  spinner.classList.add('visible');
-  input.blur(); // dismiss iPhone keyboard
+  limparResultados();
+  spinnerEl.classList.add('visible');
+  cepInput.blur();
 
   try {
-    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-    if (!res.ok) throw new Error('Erro na requisição');
+    const res  = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    if (!res.ok) throw new Error();
     const data = await res.json();
+    if (data.erro) { mostrarErro('CEP não encontrado. Verifique o número e tente novamente.'); return; }
+    preencherDetalhe(data);
+  } catch {
+    /* fallback BrasilAPI */
+    try {
+      const res2 = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
+      if (!res2.ok) throw new Error();
+      const d = await res2.json();
+      preencherDetalhe({
+        cep: d.cep, logradouro: d.street, bairro: d.neighborhood,
+        complemento: '', localidade: d.city, uf: d.state,
+        estado: d.state, ibge: d.ibge || '', ddd: ''
+      });
+    } catch {
+      mostrarErro('Não foi possível consultar o CEP. Verifique sua conexão e tente novamente.');
+    }
+  } finally {
+    spinnerEl.classList.remove('visible');
+  }
+}
 
-    if (data.erro) {
-      showError('CEP não encontrado. Verifique o número e tente novamente.');
+function preencherDetalhe(d) {
+  setField('fCep',        d.cep);
+  setField('fLogradouro', d.logradouro);
+  setField('fBairro',     d.bairro);
+  setField('fComplemento',d.complemento);
+  setField('fCidade',     d.localidade);
+  setField('fEstado',     d.uf + (d.estado && d.estado !== d.uf ? ' — ' + d.estado : ''));
+  setField('fIbge',       d.ibge);
+  setField('fDdd',        d.ddd);
+  detalheEl.classList.add('visible');
+}
+
+/* ── busca por endereço ── */
+async function buscarEndereco() {
+  const uf     = document.getElementById('selUF').value.trim();
+  const cidade = document.getElementById('inCidade').value.trim();
+  const rua    = document.getElementById('inRua').value.trim();
+  const bairro = document.getElementById('inBairro').value.trim().toLowerCase();
+
+  if (!uf)              { mostrarErro('Selecione o estado (UF).');            return; }
+  if (cidade.length < 3){ mostrarErro('Digite o nome da cidade (mínimo 3 letras).'); return; }
+  if (rua.length   < 3) { mostrarErro('Digite o nome da rua (mínimo 3 letras).');    return; }
+
+  limparResultados();
+  spinnerEl.classList.add('visible');
+  document.getElementById('inRua').blur();
+
+  try {
+    const url = `https://viacep.com.br/ws/${uf}/${encodeURIComponent(cidade)}/${encodeURIComponent(rua)}/json/`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+    let lista = await res.json();
+
+    if (!Array.isArray(lista) || lista.length === 0) {
+      mostrarErro('Nenhum endereço encontrado. Tente termos mais genéricos.');
       return;
     }
 
-    setField('fCep', data.cep);
-    setField('fLogradouro', data.logradouro);
-    setField('fBairro', data.bairro);
-    setField('fComplemento', data.complemento);
-    setField('fCidade', data.localidade);
-    setField('fEstado', `${data.uf} — ${data.estado || data.uf}`);
-    setField('fIbge', data.ibge);
-    setField('fDdd', data.ddd);
-
-    resultEl.classList.add('visible');
-
-  } catch (err) {
-    // Fallback to BrasilAPI if ViaCEP fails
-    try {
-      const res2 = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
-      if (!res2.ok) throw new Error('Fallback falhou');
-      const d = await res2.json();
-
-      setField('fCep', d.cep);
-      setField('fLogradouro', d.street);
-      setField('fBairro', d.neighborhood);
-      setField('fComplemento', '');
-      setField('fCidade', d.city);
-      setField('fEstado', d.state);
-      setField('fIbge', d.ibge || '');
-      setField('fDdd', '');
-
-      resultEl.classList.add('visible');
-    } catch {
-      showError('Não foi possível consultar o CEP. Verifique sua conexão e tente novamente.');
+    /* filtro opcional por bairro */
+    if (bairro) {
+      lista = lista.filter(r => r.bairro && r.bairro.toLowerCase().includes(bairro));
+      if (lista.length === 0) {
+        mostrarErro(`Nenhum resultado com bairro "${document.getElementById('inBairro').value.trim()}". Tente sem o filtro de bairro.`);
+        return;
+      }
     }
+
+    renderLista(lista);
+  } catch {
+    mostrarErro('Não foi possível consultar o endereço. Verifique sua conexão e tente novamente.');
   } finally {
-    spinner.classList.remove('visible');
+    spinnerEl.classList.remove('visible');
   }
 }
 
+function renderLista(lista) {
+  const total = lista.length;
+  listaHeader.textContent = total === 1 ? '1 resultado encontrado' : `${total} resultados encontrados`;
+  listaHeader.classList.add('visible');
+
+  listaEl.innerHTML = lista.map(r => {
+    const cep   = escHtml(r.cep   || '');
+    const rua   = escHtml(r.logradouro || '');
+    const comp  = r.complemento ? ' ' + escHtml(r.complemento) : '';
+    const bairro= escHtml(r.bairro || '');
+    const local = escHtml(r.localidade || '') + '/' + escHtml(r.uf || '');
+    return `
+      <div class="result-card">
+        <div class="result-card-info">
+          <div class="result-cep">${cep}</div>
+          <div class="result-rua">${rua}${comp}</div>
+          <div class="result-local">${bairro ? bairro + ' · ' : ''}${local}</div>
+        </div>
+        <button class="copy-btn" style="font-size:20px;padding:6px 8px" onclick="copiarValor('${cep}')" title="Copiar CEP">⧉</button>
+      </div>`;
+  }).join('');
+
+  listaEl.classList.add('visible');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── copiar ── */
 let toastTimer = null;
-function copiar(fieldId) {
+
+function copiarTexto(fieldId) {
   const text = document.getElementById(fieldId).textContent;
   if (!text || text === '—') return;
+  copiarValor(text);
+}
 
+function copiarValor(text) {
+  if (!text || text === '—') return;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(showToast).catch(() => legacyCopy(text));
   } else {
@@ -378,11 +611,9 @@ function copiar(fieldId) {
 function legacyCopy(text) {
   const ta = document.createElement('textarea');
   ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.opacity = '0';
+  ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
   document.body.appendChild(ta);
-  ta.focus();
-  ta.select();
+  ta.focus(); ta.select();
   try { document.execCommand('copy'); showToast(); } catch {}
   document.body.removeChild(ta);
 }
