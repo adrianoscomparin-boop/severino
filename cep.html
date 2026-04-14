@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Busca de CEP</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  background: #1c0f00;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 40px;
+}
+
+h1 {
+  color: #fff8e8;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+.subtitle {
+  color: rgba(255,220,150,0.7);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+.card {
+  background: #f5ede0;
+  border-radius: 16px;
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 14px 16px;
+  border: 2px solid #d4b896;
+  border-radius: 10px;
+  font-size: 20px;
+  font-family: inherit;
+  background: #fff;
+  color: #1c0f00;
+  letter-spacing: 2px;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+input[type="text"]:focus { border-color: #c9922a; }
+input[type="text"]::placeholder { color: #b8a090; letter-spacing: 1px; font-size: 16px; }
+
+button {
+  padding: 14px 20px;
+  background: #6b3010;
+  color: #fff8e8;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-appearance: none;
+  white-space: nowrap;
+}
+button:active { background: #4a1f08; transform: scale(0.97); }
+
+.result {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+.result.visible { display: flex; }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.field-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #8a5530;
+}
+.field-value {
+  font-size: 16px;
+  color: #1c0f00;
+  font-weight: 500;
+  padding: 10px 14px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #ddd0c0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+}
+.field-value span { flex: 1; }
+
+.copy-btn {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  color: #c9922a;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.copy-btn:active { background: rgba(201,146,42,0.15); transform: none; }
+
+.divider {
+  height: 1px;
+  background: #d4b896;
+  margin: 4px 0;
+}
+
+.error-msg {
+  display: none;
+  background: #fde8e8;
+  border: 1px solid #e8b0b0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: #8b0000;
+  font-size: 14px;
+  font-weight: 500;
+}
+.error-msg.visible { display: block; }
+
+.spinner {
+  display: none;
+  justify-content: center;
+  padding: 16px 0 4px;
+}
+.spinner.visible { display: flex; }
+.spinner svg { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.copied-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #1c0f00;
+  color: #c9922a;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  opacity: 0;
+  z-index: 999;
+  white-space: nowrap;
+}
+.copied-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.source-badge {
+  text-align: center;
+  font-size: 10px;
+  color: #b8a090;
+  margin-top: 14px;
+  letter-spacing: 0.5px;
+}
+</style>
+</head>
+<body>
+
+<h1>Busca de CEP</h1>
+<p class="subtitle">Consulta de endereço</p>
+
+<div class="card">
+  <div class="input-row">
+    <input
+      type="text"
+      id="cepInput"
+      inputmode="numeric"
+      maxlength="9"
+      placeholder="00000-000"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+    >
+    <button onclick="buscar()">Buscar</button>
+  </div>
+
+  <div class="spinner" id="spinner">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="11" stroke="#d4b896" stroke-width="3"/>
+      <path d="M14 3 A11 11 0 0 1 25 14" stroke="#6b3010" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="result" id="result">
+    <div class="field">
+      <div class="field-label">CEP</div>
+      <div class="field-value"><span id="fCep"></span><button class="copy-btn" onclick="copiar('fCep')" title="Copiar">⧉</button></div>
+    </div>
+    <div class="field">
+      <div class="field-label">Logradouro</div>
+      <div class="field-value"><span id="fLogradouro"></span><button class="copy-btn" onclick="copiar('fLogradouro')" title="Copiar">⧉</button></div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <div class="field-label">Bairro</div>
+        <div class="field-value"><span id="fBairro"></span><button class="copy-btn" onclick="copiar('fBairro')" title="Copiar">⧉</button></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Complemento</div>
+        <div class="field-value"><span id="fComplemento"></span><button class="copy-btn" onclick="copiar('fComplemento')" title="Copiar">⧉</button></div>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <div class="field-label">Cidade</div>
+        <div class="field-value"><span id="fCidade"></span><button class="copy-btn" onclick="copiar('fCidade')" title="Copiar">⧉</button></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Estado</div>
+        <div class="field-value"><span id="fEstado"></span><button class="copy-btn" onclick="copiar('fEstado')" title="Copiar">⧉</button></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="row2">
+      <div class="field">
+        <div class="field-label">IBGE</div>
+        <div class="field-value"><span id="fIbge"></span><button class="copy-btn" onclick="copiar('fIbge')" title="Copiar">⧉</button></div>
+      </div>
+      <div class="field">
+        <div class="field-label">DDD</div>
+        <div class="field-value"><span id="fDdd"></span><button class="copy-btn" onclick="copiar('fDdd')" title="Copiar">⧉</button></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="source-badge">Via <a href="https://viacep.com.br" target="_blank" rel="noopener" style="color:#c9922a;text-decoration:none;">ViaCEP</a> · sem CAPTCHA</p>
+</div>
+
+<div class="copied-toast" id="toast">Copiado!</div>
+
+<script>
+const input = document.getElementById('cepInput');
+const resultEl = document.getElementById('result');
+const errorEl = document.getElementById('errorMsg');
+const spinner = document.getElementById('spinner');
+const toast = document.getElementById('toast');
+
+input.addEventListener('input', () => {
+  let v = input.value.replace(/\D/g, '').slice(0, 8);
+  if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
+  input.value = v;
+});
+
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') buscar();
+});
+
+function setField(id, value) {
+  document.getElementById(id).textContent = value || '—';
+}
+
+function showError(msg) {
+  errorEl.textContent = msg;
+  errorEl.classList.add('visible');
+  resultEl.classList.remove('visible');
+}
+
+function hideAll() {
+  errorEl.classList.remove('visible');
+  resultEl.classList.remove('visible');
+}
+
+async function buscar() {
+  const cep = input.value.replace(/\D/g, '');
+  if (cep.length !== 8) {
+    showError('Digite um CEP válido com 8 dígitos.');
+    return;
+  }
+
+  hideAll();
+  spinner.classList.add('visible');
+  input.blur();
+
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    if (!res.ok) throw new Error('Erro na requisição');
+    const data = await res.json();
+
+    if (data.erro) {
+      showError('CEP não encontrado. Verifique o número e tente novamente.');
+      return;
+    }
+
+    setField('fCep', data.cep);
+    setField('fLogradouro', data.logradouro);
+    setField('fBairro', data.bairro);
+    setField('fComplemento', data.complemento);
+    setField('fCidade', data.localidade);
+    setField('fEstado', `${data.uf} — ${data.estado || data.uf}`);
+    setField('fIbge', data.ibge);
+    setField('fDdd', data.ddd);
+
+    resultEl.classList.add('visible');
+
+  } catch (err) {
+    try {
+      const res2 = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
+      if (!res2.ok) throw new Error('Fallback falhou');
+      const d = await res2.json();
+
+      setField('fCep', d.cep);
+      setField('fLogradouro', d.street);
+      setField('fBairro', d.neighborhood);
+      setField('fComplemento', '');
+      setField('fCidade', d.city);
+      setField('fEstado', d.state);
+      setField('fIbge', d.ibge || '');
+      setField('fDdd', '');
+
+      resultEl.classList.add('visible');
+    } catch {
+      showError('Não foi possível consultar o CEP. Verifique sua conexão e tente novamente.');
+    }
+  } finally {
+    spinner.classList.remove('visible');
+  }
+}
+
+let toastTimer = null;
+function copiar(fieldId) {
+  const text = document.getElementById(fieldId).textContent;
+  if (!text || text === '—') return;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showToast).catch(() => legacyCopy(text));
+  } else {
+    legacyCopy(text);
+  }
+}
+
+function legacyCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); showToast(); } catch {}
+  document.body.removeChild(ta);
+}
+
+function showToast() {
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
+}
+</script>
+</body>
+</html>
